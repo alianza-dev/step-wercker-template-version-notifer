@@ -1,0 +1,25 @@
+name: template-version-notifier
+version: 0.0.1
+description: Posts wercker template version mismatch to a Slack channel.
+keywords:
+  - notification
+  - webhook
+  - slack
+  - template
+  - wercker
+properties:
+  slack_url:
+    type: string
+    required: true
+  slack_channel:
+    type: string
+    required: false
+  username:
+    type: string
+    required: false
+  icon_url:
+    type: string
+    required: false
+  icon_emoji:
+    type: string
+    required: false
