@@ -1,53 +1,76 @@
 #!/bin/bash
+#source build-esen.sh
+
 # check if slack webhook url is present
-if [ -z "$WERCKER_SLACK_NOTIFIER_URL" ]; then
+if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_URL" ]; then
   fail "Please provide a Slack webhook URL"
 fi
 
+if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_URL" ]; then
+  fail "Please provide a github URL for the template"
+fi
+
 # check if a '#' was supplied in the channel name
-if [ "${WERCKER_SLACK_NOTIFIER_CHANNEL:0:1}" = '#' ]; then
-  export WERCKER_SLACK_NOTIFIER_CHANNEL=${WERCKER_SLACK_NOTIFIER_CHANNEL:1}
+if [ "${WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL:0:1}" = '#' ]; then
+  export WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL=${WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL:1}
 fi
 
 # if no username is provided use the default - werckerbot
-if [ -z "$WERCKER_SLACK_NOTIFIER_USERNAME" ]; then
-  export WERCKER_SLACK_NOTIFIER_USERNAME=werckerbot
+if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_USERNAME" ]; then
+  export WERCKER_TEMPLATE_VERSION_NOTIFIER_USERNAME=werckerbot
 fi
 
 # if no icon-url is provided for the bot use the default wercker icon
-if [ -z "$WERCKER_SLACK_NOTIFIER_ICON_URL" ] && [ -z "$WERCKER_SLACK_NOTIFIER_ICON_EMOJI" ]; then
-  export WERCKER_SLACK_NOTIFIER_ICON_URL="https://secure.gravatar.com/avatar/a08fc43441db4c2df2cef96e0cc8c045?s=140"
+if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL" ] && [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI" ]; then
+  export WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL="https://secure.gravatar.com/avatar/a08fc43441db4c2df2cef96e0cc8c045?s=140"
 fi
+
+template=$(cat <<EOF
+  template_version: 1.0.0
+  fred: booger
+EOF
+)
+
+if [ $(echo "$template" | grep -c "template_version:" ) -ne 1 ]; then
+    fail "There was more than 1 instance of template_version in the template file."
+else
+    newest_version=$(echo "$template" | grep "template_version:" | awk -F ':' '{print $2}' | tr -d " \r\n\t")
+fi
+
+current_version=$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_VERSION
 
 #Check version match
-if [ true ]; then
-    # matched
-    return 0
+if [ "$current_version" = "$newest_version" ]; then
+    # Up to date
+    info "Current version and template version match"
+    exit 0
 fi
+info "sending message"
+exit 0
 
 export WERCKER_GIT_COMMIT_SHORT=$(echo "$WERCKER_GIT_COMMIT" | cut -c1-7)
-export MESSAGE="Wercker template version mismatch for $WERCKER_APPLICATION_NAME by $WERCKER_STARTED_BY on branch $WERCKER_GIT_BRANCH (<https://$WERCKER_GIT_DOMAIN/$WERCKER_GIT_OWNER/$WERCKER_GIT_REPOSITORY/commit/$WERCKER_GIT_COMMIT|$WERCKER_GIT_COMMIT_SHORT>)"
-export FALLBACK="Wercker template version mismatch for $WERCKER_APPLICATION_NAME by $WERCKER_STARTED_BY on branch $WERCKER_GIT_BRANCH"
+export MESSAGE="Wercker template version mismatch for $WERCKER_APPLICATION_NAME by $WERCKER_STARTED_BY on branch $WERCKER_GIT_BRANCH (<https://$WERCKER_GIT_DOMAIN/$WERCKER_GIT_OWNER/$WERCKER_GIT_REPOSITORY/commit/$WERCKER_GIT_COMMIT|$WERCKER_GIT_COMMIT_SHORT>). Current version is $current_version and newest version is $newest_version."
+export FALLBACK="Wercker template version mismatch for $WERCKER_APPLICATION_NAME by $WERCKER_STARTED_BY on branch $WERCKER_GIT_BRANCH. Current version is $current_version and newest version is $newest_version."
 export COLOR="danger"
 
 # construct the json
 json="{"
 
 # channels are optional, dont send one if it wasnt specified
-if [ -n "$WERCKER_SLACK_NOTIFIER_CHANNEL" ]; then 
-    json=$json"\"channel\": \"#$WERCKER_SLACK_NOTIFIER_CHANNEL\","
+if [ -n "$WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL" ]; then 
+    json=$json"\"channel\": \"#$WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL\","
 fi
 
-if [ -z "$WERCKER_SLACK_NOTIFIER_ICON_EMOJI" ]; then
+if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI" ]; then
   export ICON_TYPE=icon_url
-  export ICON_VALUE=$WERCKER_SLACK_NOTIFIER_ICON_URL
+  export ICON_VALUE=$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL
 else
   export ICON_TYPE=icon_emoji
-  export ICON_VALUE=$WERCKER_SLACK_NOTIFIER_ICON_EMOJI
+  export ICON_VALUE=$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI
 fi
 
 json=$json"
-    \"username\": \"$WERCKER_SLACK_NOTIFIER_USERNAME\",
+    \"username\": \"$WERCKER_TEMPLATE_VERSION_NOTIFIER_USERNAME\",
     \"$ICON_TYPE\":\"$ICON_VALUE\",
     \"attachments\":[
       {
@@ -59,7 +82,7 @@ json=$json"
 }"
 
 # post the result to the slack webhook
-RESULT=$(curl -d "payload=$json" -s "$WERCKER_SLACK_NOTIFIER_URL" --output "$WERCKER_STEP_TEMP"/result.txt -w "%{http_code}")
+RESULT=$(curl -d "payload=$json" -s "$WERCKER_TEMPLATE_VERSION_NOTIFIER_URL" --output "$WERCKER_STEP_TEMP"/result.txt -w "%{http_code}")
 cat "$WERCKER_STEP_TEMP/result.txt"
 
 if [ "$RESULT" = "500" ]; then

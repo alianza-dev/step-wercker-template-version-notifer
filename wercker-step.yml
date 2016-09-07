@@ -23,3 +23,12 @@ properties:
   icon_emoji:
     type: string
     required: false
+  template_url:
+    type: string
+    required: true
+  template_url_auth:
+    type: string
+    required: false
+  template_version:
+    type: string
+    required: true
