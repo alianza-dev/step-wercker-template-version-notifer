@@ -12,7 +12,7 @@ fi
 
 # check if a '#' was supplied in the channel name
 if [ "${WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL:0:1}" = '#' ]; then
-  export WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL=${WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL:1}
+  export WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL=${WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL:1}
 fi
 
 # if no username is provided use the default - werckerbot
@@ -56,8 +56,8 @@ export COLOR="danger"
 json="{"
 
 # channels are optional, dont send one if it wasnt specified
-if [ -n "$WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL" ]; then 
-    json=$json"\"channel\": \"#$WERCKER_TEMPLATE_VERSION_NOTIFIER_CHANNEL\","
+if [ -n "$WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL" ]; then 
+    json=$json"\"channel\": \"#$WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL\","
 fi
 
 if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI" ]; then
@@ -81,7 +81,7 @@ json=$json"
 }"
 
 # post the result to the slack webhook
-RESULT=$(curl -d "payload=$json" -s "$WERCKER_TEMPLATE_VERSION_NOTIFIER_URL" --output "$WERCKER_STEP_TEMP"/result.txt -w "%{http_code}")
+RESULT=$(curl -d "payload=$json" -s "$WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_URL" --output "$WERCKER_STEP_TEMP"/result.txt -w "%{http_code}")
 cat "$WERCKER_STEP_TEMP/result.txt"
 
 if [ "$RESULT" = "500" ]; then
