@@ -26,7 +26,7 @@ properties:
   template_url:
     type: string
     required: true
-  template_url_auth:
+  template_auth:
     type: string
     required: false
   template_version:

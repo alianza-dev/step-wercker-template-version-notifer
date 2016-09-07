@@ -25,11 +25,11 @@ if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL" ] && [ -z "$WERCKER_TEMPLA
   export WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL="https://secure.gravatar.com/avatar/a08fc43441db4c2df2cef96e0cc8c045?s=140"
 fi
 
-template=$(cat <<EOF
-  template_version: 1.0.0
-  fred: booger
-EOF
-)
+if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_AUTH" ]; then
+    template=$(curl --header 'Accept: application/vnd.github.v3.raw' --location '$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_URL')
+else
+    template=$(curl --header 'Authorization: token $WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_AUTH' --header 'Accept: application/vnd.github.v3.raw' --location '$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_URL')
+fi
 
 if [ $(echo "$template" | grep -c "template_version:" ) -ne 1 ]; then
     fail "There was more than 1 instance of template_version in the template file."
@@ -45,9 +45,8 @@ if [ "$current_version" = "$newest_version" ]; then
     info "Current version and template version match"
     exit 0
 fi
-info "sending message"
-exit 0
 
+info "sending message"
 export WERCKER_GIT_COMMIT_SHORT=$(echo "$WERCKER_GIT_COMMIT" | cut -c1-7)
 export MESSAGE="Wercker template version mismatch for $WERCKER_APPLICATION_NAME by $WERCKER_STARTED_BY on branch $WERCKER_GIT_BRANCH (<https://$WERCKER_GIT_DOMAIN/$WERCKER_GIT_OWNER/$WERCKER_GIT_REPOSITORY/commit/$WERCKER_GIT_COMMIT|$WERCKER_GIT_COMMIT_SHORT>). Current version is $current_version and newest version is $newest_version."
 export FALLBACK="Wercker template version mismatch for $WERCKER_APPLICATION_NAME by $WERCKER_STARTED_BY on branch $WERCKER_GIT_BRANCH. Current version is $current_version and newest version is $newest_version."
