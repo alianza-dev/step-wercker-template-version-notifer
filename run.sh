@@ -15,16 +15,6 @@ if [ "${WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL:0:1}" = '#' ]; then
   export WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL=${WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL:1}
 fi
 
-# if no username is provided use the default - werckerbot
-if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_USERNAME" ]; then
-  export WERCKER_TEMPLATE_VERSION_NOTIFIER_USERNAME=werckerbot
-fi
-
-# if no icon-url is provided for the bot use the default wercker icon
-if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL" ] && [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI" ]; then
-  export WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL="https://secure.gravatar.com/avatar/a08fc43441db4c2df2cef96e0cc8c045?s=140"
-fi
-
 if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_AUTH" ]; then
     template=$(curl --header "Accept: application/vnd.github.v3.raw" --location "$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_URL")
 else
@@ -61,16 +51,14 @@ if [ -n "$WERCKER_TEMPLATE_VERSION_NOTIFIER_SLACK_CHANNEL" ]; then
 fi
 
 if [ -z "$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI" ]; then
-  export ICON_TYPE=icon_url
-  export ICON_VALUE=$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_URL
+  export ICON_VALUE=":wercker:"
 else
-  export ICON_TYPE=icon_emoji
   export ICON_VALUE=$WERCKER_TEMPLATE_VERSION_NOTIFIER_ICON_EMOJI
 fi
 
 json=$json"
-    \"username\": \"$WERCKER_TEMPLATE_VERSION_NOTIFIER_USERNAME\",
-    \"$ICON_TYPE\":\"$ICON_VALUE\",
+    \"username\": \"wercker\",
+    \"icon_emoji\":\"$ICON_VALUE\",
     \"attachments\":[
       {
         \"fallback\": \"$FALLBACK\",
