@@ -43,7 +43,7 @@ current_version=$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_VERSION
 if [ "$current_version" = "$newest_version" ]; then
     # Up to date
     info "Current version and template version match"
-    exit 0
+    return 0
 fi
 
 info "sending message"
