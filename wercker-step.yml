@@ -1,5 +1,5 @@
 name: template-version-notifier
-version: 0.0.4
+version: 1.0.0
 description: Posts wercker template version mismatch to a Slack channel.
 keywords:
   - notification
