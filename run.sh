@@ -21,10 +21,10 @@ else
     template=$(curl --header "Authorization: token $WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_AUTH" --header "Accept: application/vnd.github.v3.raw" --location "$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_URL")
 fi
 
-if [ "$(echo "$template" | grep -c "template_version:" )" != "1" ]; then
-    fail "There was more than 1 instance of template_version in the template file."
-else
+if [ "$(echo "$template" | grep "template_version:" )" ]; then
     newest_version=$(echo "$template" | grep "template_version:" | awk -F ':' '{print $2}' | tr -d " \r\n\t")
+else
+    fail "Failed to parse template, got response: $template"
 fi
 
 current_version=$WERCKER_TEMPLATE_VERSION_NOTIFIER_TEMPLATE_VERSION
